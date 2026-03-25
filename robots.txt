@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kanji-multi-service.vercel.app/sitemap.xml
