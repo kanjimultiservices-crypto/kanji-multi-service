@@ -2,8 +2,62 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+
+  <!-- ===== SEO GOOGLE ===== -->
+  <meta name="robots" content="index, follow">
+  <meta name="googlebot" content="index, follow">
+  <meta name="keywords" content="immobilier Abengourou, terrain à vendre Abengourou, maison à louer Abengourou, lotissement Abengourou, aménagement foncier Côte d'Ivoire, KANJI MULTI SERVICES, vente terrain Abengourou, location maison Abengourou">
+  <meta name="author" content="KANJI MULTI SERVICES">
+  <meta name="geo.region" content="CI">
+  <meta name="geo.placename" content="Abengourou, Côte d'Ivoire">
+
+  <!-- Open Graph (partage sur réseaux sociaux) -->
+  <meta property="og:title" content="KANJI MULTI SERVICES — Immobilier à Abengourou">
+  <meta property="og:description" content="Votre agence immobilière de confiance à Abengourou. Vente de terrains, lotissement, location et vente de maisons en Côte d'Ivoire.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://kanji-multi-service.vercel.app">
+  <meta property="og:locale" content="fr_CI">
+  <meta property="og:site_name" content="KANJI MULTI SERVICES">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="KANJI MULTI SERVICES — Immobilier Abengourou">
+  <meta name="twitter:description" content="Vente de terrains, lotissement, location et vente de maisons à Abengourou, Côte d'Ivoire.">
+
+  <!-- Schema.org données structurées pour Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "name": "KANJI MULTI SERVICES",
+    "description": "Agence immobilière spécialisée dans l'aménagement foncier, le lotissement, la vente de terrain et la location de maison à Abengourou.",
+    "url": "https://kanji-multi-service.vercel.app",
+    "telephone": "+2250799630206",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Immeuble Ehouman, 1er Étage, Porte 2 à Gauche",
+      "addressLocality": "Abengourou",
+      "addressCountry": "CI"
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "08:00",
+        "closes": "17:30"
+      }
+    ],
+    "sameAs": [
+      "https://www.facebook.com/share/19wn9RkQ7A/",
+      "https://www.instagram.com/kanji_multiservices",
+      "https://www.tiktok.com/@kanji.multi.servic",
+      "https://www.youtube.com/@kanjimulti-services"
+    ]
+  }
+  </script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KANJI MULTI SERVICES – Gestion Immobilière</title>
+<title>KANJI MULTI SERVICES — Immobilier à Abengourou | Terrain, Location, Vente</title>
 
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#F7941D">
@@ -1104,6 +1158,15 @@
   .ferie-note p { font-size: 0.82rem; color: #856404; margin: 0; }
 
 </style>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPA_URL = 'https://ijoogsfvrqvrsblztokr.supabase.co';
+    const SUPA_KEY = 'sb_publishable_OlgCqNc4ol52L6sOt1vZWw_DA9C9cfb';
+    const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+  </script>
+
 </head>
 <body>
 
@@ -2580,6 +2643,7 @@
     galleries['v_' + v.id] = vPhotos;
     db.ventes = db.ventes || [];
     db.ventes.push(v); save('ventes');
+    saveVenteDB(v);
     addActivity('Maison à vendre <strong>' + ref + '</strong> ajoutée', 'green');
     closeModal('modal-vente');
     clearForm(['v-ref','v-adresse','v-pieces','v-sup','v-prix','v-desc']);
@@ -2627,6 +2691,7 @@
     const v = db.ventes.find(x => x.id === id);
     db.ventes = db.ventes.filter(x => x.id !== id);
     save('ventes');
+    deleteVenteDB(id);
     addActivity('Maison à vendre <strong>' + v.ref + '</strong> supprimée', 'green');
     renderVentes(); updateStats();
   }
@@ -2689,6 +2754,128 @@
     document.querySelectorAll('.admin-secret-nav').forEach(el => {
       el.classList.add('visible');
     });
+  }
+
+
+  // ===== SUPABASE SYNC =====
+
+  // ---- TERRAINS SUPABASE ----
+  async function loadTerrains() {
+    try {
+      const { data, error } = await supabase.from('terrains').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      db.terrains = data || [];
+      renderTerrains();
+      updateStats();
+      updateBars();
+    } catch(e) {
+      console.log('Erreur chargement terrains:', e);
+      renderTerrains();
+    }
+  }
+
+  async function saveTerrainDB(t) {
+    try {
+      const { error } = await supabase.from('terrains').insert([{
+        ref: t.ref, type: t.type, loc: t.loc,
+        sup: t.sup, prix: t.prix, statut: t.statut,
+        lot: t.lot, ilot: t.ilot, notes: t.notes,
+        local_id: t.id
+      }]);
+      if (error) throw error;
+      await loadTerrains();
+    } catch(e) {
+      console.log('Erreur sauvegarde terrain:', e);
+    }
+  }
+
+  async function deleteTerrainDB(localId) {
+    try {
+      const { error } = await supabase.from('terrains').delete().eq('local_id', localId);
+      if (error) throw error;
+      await loadTerrains();
+    } catch(e) {
+      console.log('Erreur suppression terrain:', e);
+    }
+  }
+
+  // ---- MAISONS SUPABASE ----
+  async function loadMaisons() {
+    try {
+      const { data, error } = await supabase.from('maisons').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      db.maisons = data || [];
+      renderMaisons();
+      updateStats();
+      updateBars();
+    } catch(e) {
+      console.log('Erreur chargement maisons:', e);
+      renderMaisons();
+    }
+  }
+
+  async function saveMaisonDB(m) {
+    try {
+      const { error } = await supabase.from('maisons').insert([{
+        ref: m.ref, type: m.type, adresse: m.adresse,
+        pieces: m.pieces, loyer: m.loyer, statut: m.statut,
+        locataire: m.locataire, description: m.desc,
+        local_id: m.id
+      }]);
+      if (error) throw error;
+      await loadMaisons();
+    } catch(e) {
+      console.log('Erreur sauvegarde maison:', e);
+    }
+  }
+
+  async function deleteMaisonDB(localId) {
+    try {
+      const { error } = await supabase.from('maisons').delete().eq('local_id', localId);
+      if (error) throw error;
+      await loadMaisons();
+    } catch(e) {
+      console.log('Erreur suppression maison:', e);
+    }
+  }
+
+  // ---- VENTES SUPABASE ----
+  async function loadVentes() {
+    try {
+      const { data, error } = await supabase.from('ventes').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      db.ventes = data || [];
+      renderVentes();
+      updateStats();
+    } catch(e) {
+      console.log('Erreur chargement ventes:', e);
+      renderVentes();
+    }
+  }
+
+  async function saveVenteDB(v) {
+    try {
+      const { error } = await supabase.from('ventes').insert([{
+        ref: v.ref, type: v.type, adresse: v.adresse,
+        pieces: v.pieces, sup: v.sup, prix: v.prix,
+        statut: v.statut, description: v.desc,
+        local_id: v.id
+      }]);
+      if (error) throw error;
+      await loadVentes();
+    } catch(e) {
+      console.log('Erreur sauvegarde vente:', e);
+    }
+  }
+
+  async function deleteVenteDB(localId) {
+    try {
+      const { error } = await supabase.from('ventes').delete().eq('local_id', localId);
+      if (error) throw error;
+      await loadVentes();
+    } catch(e) {
+      console.log('Erreur suppression vente:', e);
+    }
   }
 
   // ===== DATA =====
@@ -2762,6 +2949,7 @@
     t.photos = tPhotos;
     galleries['t_' + t.id] = tPhotos;
     db.terrains.push(t); save('terrains');
+    saveTerrainDB(t);
     addActivity(`Terrain <strong>${ref}</strong> ajouté — ${t.statut}`, 'orange');
     closeModal('modal-terrain');
     clearForm(['t-ref','t-loc','t-sup','t-prix','t-lot','t-ilot','t-notes']);
@@ -2806,6 +2994,7 @@
     const t = db.terrains.find(x => x.id === id);
     db.terrains = db.terrains.filter(x => x.id !== id);
     save('terrains');
+    deleteTerrainDB(id);
     addActivity(`Terrain <strong>${t.ref}</strong> supprimé`, 'orange');
     renderTerrains(); updateStats(); updateBars();
   }
@@ -2846,6 +3035,7 @@
     m.photos = mPhotos;
     galleries['m_' + m.id] = mPhotos;
     db.maisons.push(m); save('maisons');
+    saveMaisonDB(m);
     addActivity(`Maison <strong>${ref}</strong> ajoutée — ${m.statut}`, 'blue');
     closeModal('modal-maison');
     clearForm(['m-ref','m-adresse','m-pieces','m-loyer','m-locataire','m-desc']);
@@ -2889,6 +3079,7 @@
     const m = db.maisons.find(x => x.id === id);
     db.maisons = db.maisons.filter(x => x.id !== id);
     save('maisons');
+    deleteMaisonDB(id);
     addActivity(`Maison <strong>${m.ref}</strong> supprimée`, 'blue');
     renderMaisons(); updateStats(); updateBars();
   }
@@ -3182,7 +3373,8 @@
   db.clients.forEach(c => { if (c.photos) galleries['c_' + c.id] = c.photos; });
 
   // ===== INIT =====
-  renderTerrains(); renderMaisons(); renderVentes(); renderClients(); renderContrats(); renderPaiements(); renderActivity(); updateStats(); updateBars();
+  loadTerrains(); loadMaisons(); loadVentes();
+  renderClients(); renderContrats(); renderPaiements(); renderActivity(); updateStats(); updateBars();
 </script>
 
 <!-- LIGHTBOX -->
