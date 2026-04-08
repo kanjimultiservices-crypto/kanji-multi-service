@@ -1164,7 +1164,14 @@
   <script>
     const SUPA_URL = 'https://ijoogsfvrqvrsblztokr.supabase.co';
     const SUPA_KEY = 'sb_publishable_OlgCqNc4ol52L6sOt1vZWw_DA9C9cfb';
-    const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+    let supabaseClient = null;
+    try {
+      supabaseClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+      console.log('✅ Supabase connecté !');
+    } catch(e) {
+      console.error('❌ Erreur Supabase:', e);
+    }
+    const supabase = supabaseClient;
   </script>
 
 </head>
@@ -2761,31 +2768,37 @@
 
   // ---- TERRAINS SUPABASE ----
   async function loadTerrains() {
+    if (!supabase) { console.error('Supabase non connecté'); renderTerrains(); return; }
     try {
+      console.log('📥 Chargement terrains depuis Supabase...');
       const { data, error } = await supabase.from('terrains').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
+      if (error) { console.error('❌ Erreur load terrains:', error); throw error; }
+      console.log('✅ Terrains chargés:', data?.length, 'enregistrements');
       db.terrains = data || [];
       renderTerrains();
       updateStats();
       updateBars();
     } catch(e) {
-      console.log('Erreur chargement terrains:', e);
+      console.error('❌ Erreur chargement terrains:', e);
       renderTerrains();
     }
   }
 
   async function saveTerrainDB(t) {
+    if (!supabase) { console.error('Supabase non connecté'); return; }
     try {
-      const { error } = await supabase.from('terrains').insert([{
+      console.log('📤 Envoi terrain vers Supabase...', t.ref);
+      const { data, error } = await supabase.from('terrains').insert([{
         ref: t.ref, type: t.type, loc: t.loc,
         sup: t.sup, prix: t.prix, statut: t.statut,
         lot: t.lot, ilot: t.ilot, notes: t.notes,
         local_id: t.id
-      }]);
-      if (error) throw error;
+      }]).select();
+      if (error) { console.error('❌ Erreur insert terrain:', error); throw error; }
+      console.log('✅ Terrain sauvegardé dans Supabase!', data);
       await loadTerrains();
     } catch(e) {
-      console.log('Erreur sauvegarde terrain:', e);
+      console.error('❌ Erreur sauvegarde terrain:', e);
     }
   }
 
