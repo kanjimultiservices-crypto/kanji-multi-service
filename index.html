@@ -1356,12 +1356,12 @@
             <div class="sub">↑ disponibles</div>
           </div>
         </div>
-        <div class="stat-card gray">
+        <div class="stat-card gray" id="card-revenus" onclick="if(!adminUnlocked){checkAdminAction(null)}" style="cursor:pointer;">
           <div class="stat-icon">💰</div>
           <div class="stat-info">
             <div class="label">Total Encaissé</div>
-            <div class="value" id="stat-revenus" style="font-size:1.1rem;">0</div>
-            <div class="sub">FCFA</div>
+            <div class="value" id="stat-revenus" style="font-size:1.1rem;">🔒</div>
+            <div class="sub" id="stat-revenus-sub">Admin seulement</div>
           </div>
         </div>
       </div>
@@ -3431,7 +3431,13 @@
     db.ventes = db.ventes || [];
     document.getElementById('stat-ventes').textContent = db.ventes.filter(v => v.statut === 'Disponible').length;
     const rev = db.paiements.reduce((s,p)=>s+(Number(p.montant)||0),0);
-    document.getElementById('stat-revenus').textContent = rev > 0 ? rev.toLocaleString() : '0';
+    if (adminUnlocked) {
+      document.getElementById('stat-revenus').textContent = rev > 0 ? rev.toLocaleString() : '0';
+      document.getElementById('stat-revenus-sub').textContent = 'FCFA';
+    } else {
+      document.getElementById('stat-revenus').textContent = '🔒';
+      document.getElementById('stat-revenus-sub').textContent = 'Admin seulement';
+    }
   }
 
   function updateBars() {
