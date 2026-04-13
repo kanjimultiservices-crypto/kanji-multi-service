@@ -2833,7 +2833,7 @@
   async function deleteClientDB(localId) {
     if (!supabase) return;
     try {
-      const { error } = await supabase.from('clients').delete().eq('local_id', localId);
+      const { error } = await supabase.from('clients').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadClients();
     } catch(e) { console.log('Erreur deleteClientDB:', e); }
@@ -2868,7 +2868,7 @@
   async function deleteContratDB(localId) {
     if (!supabase) return;
     try {
-      const { error } = await supabase.from('contrats').delete().eq('local_id', localId);
+      const { error } = await supabase.from('contrats').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadContrats();
     } catch(e) { console.log('Erreur deleteContratDB:', e); }
@@ -2903,7 +2903,7 @@
   async function deletePaiementDB(localId) {
     if (!supabase) return;
     try {
-      const { error } = await supabase.from('paiements').delete().eq('local_id', localId);
+      const { error } = await supabase.from('paiements').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadPaiements();
     } catch(e) { console.log('Erreur deletePaiementDB:', e); }
@@ -2949,7 +2949,7 @@
 
   async function deleteTerrainDB(localId) {
     try {
-      const { error } = await supabase.from('terrains').delete().eq('local_id', localId);
+      const { error } = await supabase.from('terrains').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadTerrains();
     } catch(e) {
@@ -2989,7 +2989,7 @@
 
   async function deleteMaisonDB(localId) {
     try {
-      const { error } = await supabase.from('maisons').delete().eq('local_id', localId);
+      const { error } = await supabase.from('maisons').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadMaisons();
     } catch(e) {
@@ -3028,7 +3028,7 @@
 
   async function deleteVenteDB(localId) {
     try {
-      const { error } = await supabase.from('ventes').delete().eq('local_id', localId);
+      const { error } = await supabase.from('ventes').delete().or(`local_id.eq.${localId},id.eq.${localId}`);
       if (error) throw error;
       await loadVentes();
     } catch(e) {
